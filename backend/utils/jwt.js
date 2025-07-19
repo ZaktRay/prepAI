@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken"
 
-const createToken = (user) => {
+export const createToken = (user) => {
     return jwt.sign(
         {
             id: user._id
@@ -10,7 +10,7 @@ const createToken = (user) => {
     )
 }
 
-const verifyToken = (token) => {
+export const verifyToken = (token) => {
     try {
         return jwt.verify(token, process.env.JWT_SECRET);
     }
@@ -19,4 +19,3 @@ const verifyToken = (token) => {
     }
 }
 
-export default {createToken,verifyToken};

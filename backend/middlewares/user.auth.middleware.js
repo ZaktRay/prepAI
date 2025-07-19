@@ -1,5 +1,5 @@
 import User from "../models/user.model.js"
-import verifyToken from '../utils/jwt.js'
+import {verifyToken} from '../utils/jwt.js'
 
 const protect = async (req, res, next) => {
     const authHeader = req.headers.authorization;

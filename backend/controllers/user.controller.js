@@ -93,9 +93,9 @@ const getProfile = async (req, res) => {
 
 const testUpdate = async (req,res)=>{
     try{
-        const {result} = req.body;
+        const {testResult} = req.body;
         let user = await User.findById(req.user._id);
-        user.tests.push(result);
+        user.tests.push(testResult);
         await user.save();
 
         return res.status(200).json({

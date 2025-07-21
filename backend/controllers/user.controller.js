@@ -94,6 +94,7 @@ const getProfile = async (req, res) => {
 const testUpdate = async (req,res)=>{
     try{
         const data = req.body;
+        data.date = new Date();
         let user = await User.findById(req.user._id);
         user.tests.push(data);
         await user.save();

@@ -4,7 +4,6 @@ import { parseQuestion } from "../utils/parseQuestion.js";
 const generateResponse = async (req, res) => {
     try {
         const { prompt } = req;
-        console.log(prompt);
         if (!prompt) {
             return res.status(400).json({
                 success: false,
@@ -30,7 +29,9 @@ const generateResponse = async (req, res) => {
 Your job is to read the notes provided by the user and generate relevant study questions.
 The questions should test understanding and recall, make them multiple choice and after the question provide the answer as well.
 Do not add unrelated information. Only use what the user gives you.
-Generate at least ten questions.`
+Generate at least ten questions.
+Also generate a very short, summarized and suitable title.
+Also don't say give any introductory text.`
                     },
                     {
                         role: "user",

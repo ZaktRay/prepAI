@@ -1,5 +1,5 @@
 import User from "../models/user.model.js";
-import {createToken} from "../utils/jwt.js";
+import { createToken } from "../utils/jwt.js";
 
 const registerUser = async (req, res) => {
     try {
@@ -52,11 +52,11 @@ const loginUser = async (req, res) => {
         }
 
         return res.status(200).json({
-            success : true,
-            message : 'login successful',
-            token : createToken(user)
+            success: true,
+            message: 'login successful',
+            token: createToken(user)
         })
-        
+
 
 
     } catch (err) {
@@ -71,42 +71,44 @@ const loginUser = async (req, res) => {
 
 
 const getProfile = async (req, res) => {
-    try{ 
+    try {
         res.json({
-            success : true,
-            user : {
-                 _id: req.user._id,
+            success: true,
+            user: {
+                _id: req.user._id,
                 name: req.user.name,
                 email: req.user.email,
                 tests: req.user.tests
             }
         })
     }
-    catch(err){
+    catch (err) {
         console.log(err);
-          return res.status(400).json({
+        return res.status(400).json({
             success: false,
             message: err.message
         })
     }
 }
 
-const testUpdate = async (req,res)=>{
-    try{
+const testUpdate = async (req, res) => {
+    try {
         const data = req.body;
         data.date = new Date();
-        let user = await User.findById(req.user._id);
-        user.tests.push(data);
-        await user.save();
+        let user = await User.findByIdAndUpdate(
+            req.user._id,
+            { $push: { tests: { ...req.body, date: new Date() } } },
+            { new: true }
+        );
 
         return res.status(200).json({
-            success : true,
-            message : "updated result successfully"
+            success: true,
+            message: "updated result successfully"
         })
- 
-    } catch(err){
+
+    } catch (err) {
         console.log(err);
-          return res.status(400).json({
+        return res.status(400).json({
             success: false,
             message: err.message
         })
@@ -114,4 +116,4 @@ const testUpdate = async (req,res)=>{
 }
 
 
-export default {registerUser,loginUser,getProfile,testUpdate}
+export default { registerUser, loginUser, getProfile, testUpdate }

@@ -78,7 +78,8 @@ const getProfile = async (req, res) => {
                 _id: req.user._id,
                 name: req.user.name,
                 email: req.user.email,
-                tests: req.user.tests
+                tests: req.user.tests,
+                updatedAt: req.user.updatedAt
             }
         })
     }

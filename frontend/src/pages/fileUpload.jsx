@@ -1,12 +1,20 @@
 import React, { useState } from 'react';
 import { Upload, FileText, Type, Brain, ArrowLeft, Plus } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios'
+import { ClipLoader } from "react-spinners"
 
 const FileUpload = () => {
-  const [inputMode, setInputMode] = useState('upload'); // 'upload' or 'text'
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
+  const navigate = useNavigate();
+
+  const [inputMode, setInputMode] = useState('upload');
   const [selectedFile, setSelectedFile] = useState(null);
   const [textInput, setTextInput] = useState('');
   const [isDragging, setIsDragging] = useState(false);
+  const formData = new FormData();
+
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleFileSelect = (event) => {
     const file = event.target.files[0];
@@ -31,12 +39,36 @@ const FileUpload = () => {
   };
 
   const handleSubmit = () => {
+    setIsLoading(true);
     if (inputMode === 'upload' && selectedFile) {
-      console.log('Uploading file:', selectedFile.name);
-      // Handle file upload logic here
+      formData.append('pdf', selectedFile);
+      axios.post(`${backendURL}/user/generate`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      })
+        .then(response => {
+          setIsLoading(false);
+          navigate('/test', { state: { testData: response.data.message, fileName: selectedFile.name } });
+
+        })
+        .catch(error => {
+          setIsLoading(false);
+          console.error('Error:', error.message);
+        });
+
     } else if (inputMode === 'text' && textInput.trim()) {
-      console.log('Processing text:', textInput);
-      // Handle text input logic here
+      axios.post(`${backendURL}/user/generate`, {
+        prompt: textInput
+      })
+        .then(response => {
+          navigate('/test', { state: { testData: response.data.message, fileName: selectedFile?.name } });
+
+        })
+        .catch(error => {
+          console.error('Error:', error.message);
+
+        });
     }
   };
 
@@ -47,22 +79,22 @@ const FileUpload = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col space-y-3 items-center justify-between mb-6 lg:flex-row">
             <div className="flex items-center space-x-4">
-                <Link to={'/dashboard'}>
-                 <button className="w-12 h-12 bg-white hover:bg-gray-50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center border border-gray-200 hover:border-gray-300">
-                <ArrowLeft className="w-5 h-5 text-gray-600" />
-              </button>
-                </Link>
-             
-              <div>
+              {/* <Link to={'/dashboard'}>
+                <button className="w-12 h-12 bg-white hover:bg-gray-50 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center border border-gray-200 hover:border-gray-300">
+                  <ArrowLeft className="w-5 h-5 text-gray-600" />
+                </button>
+              </Link> */}
+
+              <div className='text-center lg:text-left'>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                   Create AI Test
                 </h1>
                 <p className="text-gray-600 mt-1">Upload your study materials or paste your notes to generate an AI-powered MCQ test</p>
               </div>
             </div>
-            <div className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 py-2 rounded-2xl shadow-lg">
+            <div className="w-[40%] flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 py-2 rounded-2xl shadow-lg lg:w-[15%]">
               <Brain className="w-4 h-4" />
               <span className="text-sm font-semibold">AI Powered</span>
             </div>
@@ -72,22 +104,20 @@ const FileUpload = () => {
           <div className="flex items-center space-x-4 bg-white/70 backdrop-blur-sm rounded-2xl p-2 shadow-lg border border-white/20 w-fit">
             <button
               onClick={() => setInputMode('upload')}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                inputMode === 'upload'
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-              }`}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${inputMode === 'upload'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                }`}
             >
               <Upload className="w-4 h-4" />
               <span>Upload File</span>
             </button>
             <button
               onClick={() => setInputMode('text')}
-              className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${
-                inputMode === 'text'
-                  ? 'bg-blue-600 text-white shadow-lg'
-                  : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-              }`}
+              className={`flex items-center space-x-2 px-6 py-3 rounded-xl font-semibold transition-all duration-300 ${inputMode === 'text'
+                ? 'bg-blue-600 text-white shadow-lg'
+                : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
+                }`}
             >
               <Type className="w-4 h-4" />
               <span>Type Notes</span>
@@ -106,13 +136,12 @@ const FileUpload = () => {
               </div>
 
               <div
-                className={`border-2 border-dashed rounded-3xl p-12 text-center transition-all duration-300 ${
-                  isDragging
-                    ? 'border-blue-400 bg-blue-50'
-                    : selectedFile
+                className={`border-2 border-dashed rounded-3xl p-12 text-center transition-all duration-300 ${isDragging
+                  ? 'border-blue-400 bg-blue-50'
+                  : selectedFile
                     ? 'border-emerald-400 bg-emerald-50'
                     : 'border-gray-300 hover:border-gray-400 hover:bg-gray-50'
-                }`}
+                  }`}
                 onDragOver={handleDragOver}
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
@@ -196,15 +225,15 @@ For example:
           <div className="mt-8 flex justify-center">
             <button
               onClick={handleSubmit}
-              disabled={!canSubmit}
-              className={`flex items-center space-x-3 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl ${
-                canSubmit
-                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
-                  : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-              }`}
+              disabled={!canSubmit || isLoading}
+              className={`flex items-center space-x-3 px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 shadow-lg hover:shadow-xl ${canSubmit
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
+                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                }`}
             >
-              <Brain className="w-5 h-5" />
-              <span>Generate AI Test</span>
+              {isLoading ? <div className='mx-5'><ClipLoader color="#ffffff" loading={true} size={23} /></div> : <div className='flex items-center gap-4'>
+                <Brain className="w-5 h-5" />
+                <span>Generate AI Test</span> </div>}
             </button>
           </div>
         </div>

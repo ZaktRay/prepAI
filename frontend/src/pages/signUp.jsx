@@ -2,12 +2,14 @@ import React, { useState } from 'react';
 import { Mail, Lock, User, Eye, EyeOff, Brain } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { ClipLoader } from "react-spinners";
 import { toast } from 'react-toastify';
 
 
 const SignUp = ({ onSwitchToLogin }) => {
     const backendURL = import.meta.env.VITE_BACKEND_URL;
     const navigate = useNavigate();
+
 
     const [formData, setFormData] = useState({
         name: '',
@@ -16,6 +18,7 @@ const SignUp = ({ onSwitchToLogin }) => {
         password: ''
     });
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleChange = (e) => {
         setFormData({
@@ -25,18 +28,20 @@ const SignUp = ({ onSwitchToLogin }) => {
     };
 
     const handleSubmit = (e) => {
+        setIsLoading(true);
         e.preventDefault();
-         axios.post(`${backendURL}/user/register`, {
+        axios.post(`${backendURL}/user/register`, {
             ...formData
         })
             .then(response => {
-                console.log('Success:', response.data);
+                setIsLoading(false);
                 toast.success('Registered Successfully!');
                 localStorage.setItem('token', response.data.token);
                 navigate('/');
-                
+
             })
             .catch(error => {
+                setIsLoading(false);
                 console.error('Error:', error.message);
                 toast.error(error.response.data.message);
 
@@ -158,10 +163,11 @@ const SignUp = ({ onSwitchToLogin }) => {
 
                         {/* Signup Button */}
                         <button
+                            disabled={isLoading}
                             type="submit"
                             className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-4 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl"
                         >
-                            Create Account
+                            {isLoading ? <ClipLoader color="#6C63FF" loading={true} size={23} /> : "Create Account"}
                         </button>
                     </form>
 

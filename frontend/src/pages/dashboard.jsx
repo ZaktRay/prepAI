@@ -1,85 +1,40 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { User, Mail, Brain, FileText, TrendingUp, Calendar, BookOpen, Upload, Zap, Award, LogOut, Play } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+
 
 const StudentDashboard = () => {
-  // Mock student data
-  const student = {
-    name: "Sarah Chen",
-    email: "sarah.chen@student.edu",
-    studentId: "AI2024001",
-    totalTests: 12,
-    averageScore: 87.3,
-    totalStudyMaterials: 24
-  };
+  const backendURL = import.meta.env.VITE_BACKEND_URL;
+  const navigate = useNavigate();
 
-  const tests = [
-    { 
-      id: 1, 
-      title: "Machine Learning Fundamentals", 
-      source: "ML_Chapter_3_Notes.pdf", 
-      sourceType: "pdf",
-      date: "2024-01-15", 
-      totalQuestions: 15, 
-      correctAnswers: 14, 
-      score: 93, 
-      timeSpent: "12m 30s",
-      difficulty: "medium",
-      aiConfidence: 95
-    },
-    { 
-      id: 2, 
-      title: "Data Structures & Algorithms", 
-      source: "DSA Study Notes", 
-      sourceType: "notes",
-      date: "2024-01-18", 
-      totalQuestions: 20, 
-      correctAnswers: 17, 
-      score: 85, 
-      timeSpent: "18m 45s",
-      difficulty: "hard",
-      aiConfidence: 92
-    },
-    { 
-      id: 3, 
-      title: "Database Management Systems", 
-      source: "DBMS_Lecture_Notes.pdf", 
-      sourceType: "pdf",
-      date: "2024-01-22", 
-      totalQuestions: 12, 
-      correctAnswers: 10, 
-      score: 83, 
-      timeSpent: "9m 15s",
-      difficulty: "medium",
-      aiConfidence: 88
-    },
-    { 
-      id: 4, 
-      title: "Web Development Basics", 
-      source: "Frontend Development Notes", 
-      sourceType: "notes",
-      date: "2024-01-25", 
-      totalQuestions: 18, 
-      correctAnswers: 16, 
-      score: 89, 
-      timeSpent: "14m 20s",
-      difficulty: "easy",
-      aiConfidence: 96
-    },
-    { 
-      id: 5, 
-      title: "Computer Networks", 
-      source: "Networking_Concepts.pdf", 
-      sourceType: "pdf",
-      date: "2024-01-28", 
-      totalQuestions: 16, 
-      correctAnswers: 15, 
-      score: 94, 
-      timeSpent: "11m 50s",
-      difficulty: "medium",
-      aiConfidence: 91
-    }
-  ];
+  const [user, setUser] = useState({});
+  useEffect(() => {
+    axios.get(`${backendURL}/user/profile`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('token')}`
+      }
+    })
+      .then(response => {
+        setUser(response.data.user);
+      })
+      .catch(error => {
+        console.error('Error:', error.message);
+
+      });
+  }, [])
+
+  const logOut = ()=>{
+    localStorage.removeItem('token');
+    navigate('/login');
+  }
+
+  function formatDate(isoString) {
+  const date = new Date(isoString);
+  const options = { year: 'numeric', month: 'short', day: 'numeric' };
+  return date.toLocaleDateString('en-US', options).replace(',', '');
+}
 
   const getDifficultyColor = (difficulty) => {
     switch (difficulty) {
@@ -97,36 +52,34 @@ const StudentDashboard = () => {
     return 'text-rose-600';
   };
 
-  // Calculate performance metrics
-  const totalQuestions = tests.reduce((sum, test) => sum + test.totalQuestions, 0);
-  const totalCorrect = tests.reduce((sum, test) => sum + test.correctAnswers, 0);
-  const overallAccuracy = Math.round((totalCorrect / totalQuestions) * 100);
+
+  const totalQuestions = user.tests?.reduce((sum, test) => sum + test.totalQuestions, 0);
+  const totalCorrect = user.tests?.reduce((sum, test) => sum + test.correctCount, 0);
+  const overallAccuracy = totalQuestions && totalCorrect ? Math.round((totalCorrect / totalQuestions) * 100) : 0;
+  const averageScore = user.tests?.length ? (user.tests.reduce((sum, test) => sum + test.score, 0) / user.tests?.length).toFixed(1) : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 sm:p-6 lg:p-8">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <Brain className="w-6 h-6 text-white" />
-              </div>
-              <div>
+          <div className=" justify-between mb-4 lg:flex lg:items-center">
+            <div className="flex items-center space-x-3 w-full lg:w-[50%]">
+              <div className='text-center lg:text-left'>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                   AI Study Dashboard
                 </h1>
                 <p className="text-gray-600 mt-1">Track your AI-generated test performance and study progress</p>
               </div>
             </div>
-            <div className="flex items-center space-x-4">
-                <Link to={'/upload'}>
-              <button className="bg-white hover:bg-gray-50 text-gray-800 font-semibold py-3 px-6 rounded-2xl border-2 border-gray-300 hover:border-gray-400 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2">
-                <Play className="w-5 h-5" />
-                <span>Take Test</span>
-              </button>  
-                </Link>
-              <button className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-xl border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-2">
+            <div className="flex items-center space-x-4 justify-between">
+              <Link to={'/upload'}>
+                <button className="bg-white hover:bg-gray-50 text-gray-800 font-semibold py-3 px-6 rounded-2xl border-2 border-gray-300 hover:border-gray-400 shadow-lg hover:shadow-xl transition-all duration-300 flex items-center space-x-2">
+                  <Play className="w-5 h-5" />
+                  <span>Take Test</span>
+                </button>
+              </Link>
+              <button onClick={logOut} className="bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-2 px-4 rounded-xl border border-gray-200 hover:border-gray-300 shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-2">
                 <LogOut className="w-4 h-4" />
                 <span>Logout</span>
               </button>
@@ -138,46 +91,42 @@ const StudentDashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           {/* Student Profile Card */}
           <div className="lg:col-span-2 bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 p-8 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-start justify-between mb-6">
+            <div className="flex items-start justify-between mb-6 lg:flex">
               <div className="flex items-center space-x-4">
                 <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
                   <User className="w-8 h-8 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{student.name}</h2>
-                  <p className="text-gray-500 font-medium">ID: {student.studentId}</p>
+                  <h2 className="text-2xl font-bold text-gray-900">{user?.name}</h2>
+                  <p className="text-gray-500 font-medium">ID: {user?._id}</p>
                   <div className="flex items-center text-gray-600 mt-2">
                     <Mail className="w-4 h-4 mr-2" />
-                    <span className="text-sm">{student.email}</span>
+                    <span className="text-sm">{user?.email}</span>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center space-x-2 bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-4 py-2 rounded-2xl shadow-lg">
-                <Zap className="w-4 h-4" />
-                <span className="text-sm font-semibold">AI Powered</span>
-              </div>
             </div>
-            
+
             <div className="grid grid-cols-3 gap-6 pt-6 border-t border-gray-100">
               <div className="text-center">
                 <div className="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-sm">
                   <BookOpen className="w-6 h-6 text-blue-600" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{student.totalTests}</p>
+                <p className="text-2xl font-bold text-gray-900">{user?.tests?.length}</p>
                 <p className="text-sm text-gray-600 font-medium">AI Tests Taken</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-emerald-100 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-sm">
                   <TrendingUp className="w-6 h-6 text-emerald-600" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{student.averageScore}%</p>
+                <p className="text-2xl font-bold text-gray-900">{averageScore}%</p>
                 <p className="text-sm text-gray-600 font-medium">Average Score</p>
               </div>
               <div className="text-center">
                 <div className="w-12 h-12 bg-amber-100 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-sm">
                   <FileText className="w-6 h-6 text-amber-600" />
                 </div>
-                <p className="text-2xl font-bold text-gray-900">{student.totalStudyMaterials}</p>
+                <p className="text-2xl font-bold text-gray-900">{user?.tests?.length}</p>
                 <p className="text-sm text-gray-600 font-medium">Study Materials</p>
               </div>
             </div>
@@ -245,7 +194,7 @@ const StudentDashboard = () => {
         {/* Test Results Section */}
         <div className="bg-white/70 backdrop-blur-sm rounded-3xl shadow-xl border border-white/20 overflow-hidden hover:shadow-2xl transition-all duration-300">
           <div className="p-8 border-b border-gray-100">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col text-center items-center justify-between lg:flex-row lg:text-left">
               <div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">AI-Generated Test Results</h3>
                 <p className="text-gray-600">Detailed breakdown of your performance on AI-created MCQ tests</p>
@@ -253,7 +202,7 @@ const StudentDashboard = () => {
               <div className="flex items-center space-x-3">
                 <div className="flex items-center space-x-2 bg-blue-50 px-4 py-2 rounded-2xl border border-blue-100">
                   <Calendar className="w-4 h-4 text-blue-600" />
-                  <span className="text-sm text-blue-700 font-medium">Last updated: Jan 28, 2024</span>
+                  <span className="text-sm text-blue-700 font-medium">Last updated:  {formatDate(user.updatedAt)}</span>
                 </div>
               </div>
             </div>
@@ -271,15 +220,14 @@ const StudentDashboard = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {tests.map((test, index) => (
+                {user.tests?.map((test, index) => (
                   <tr key={test.id} className="hover:bg-blue-50/30 transition-all duration-200 group">
                     <td className="px-8 py-6">
                       <div className="flex items-start space-x-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${
-                          test.sourceType === 'pdf' ? 'bg-red-100' : 'bg-blue-100'
-                        }`}>
-                          {test.sourceType === 'pdf' ? (
-                            <FileText className={`w-6 h-6 ${test.sourceType === 'pdf' ? 'text-red-600' : 'text-blue-600'}`} />
+                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-sm ${test.fileName ? 'bg-red-100' : 'bg-blue-100'
+                          }`}>
+                          {test.fileName ? (
+                            <FileText className={`w-6 h-6 ${test.fileName ? 'text-red-600' : 'text-blue-600'}`} />
                           ) : (
                             <Upload className="w-6 h-6 text-blue-600" />
                           )}
@@ -288,10 +236,10 @@ const StudentDashboard = () => {
                           <h4 className="text-sm font-bold text-gray-900 group-hover:text-blue-700 transition-colors">
                             {test.title}
                           </h4>
-                          <p className="text-xs text-gray-500 mt-1 truncate">{test.source}</p>
+                          <p className="text-xs text-gray-500 mt-1 truncate">{test.fileName}</p>
                           <div className="flex items-center mt-2">
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getDifficultyColor(test.difficulty)}`}>
-                              {test.difficulty.charAt(0).toUpperCase() + test.difficulty.slice(1)}
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getDifficultyColor('medium')}`}>
+                              {'medium'.charAt(0).toUpperCase() + 'medium'.slice(1)}
                             </span>
                           </div>
                         </div>
@@ -302,16 +250,16 @@ const StudentDashboard = () => {
                         <div className="flex-1">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-xs font-medium text-gray-700">
-                              {test.correctAnswers}/{test.totalQuestions}
+                              {test.correctCount}/{test.totalQuestions}
                             </span>
                             <span className="text-xs text-gray-500">
-                              {Math.round((test.correctAnswers / test.totalQuestions) * 100)}%
+                              {Math.round((test.correctCount / test.totalQuestions) * 100)}%
                             </span>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2 shadow-inner">
-                            <div 
+                            <div
                               className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-500 shadow-sm"
-                              style={{ width: `${(test.correctAnswers / test.totalQuestions) * 100}%` }}
+                              style={{ width: `${(test.correctCount / test.totalQuestions) * 100}%` }}
                             ></div>
                           </div>
                         </div>
@@ -329,9 +277,9 @@ const StudentDashboard = () => {
                       <div className="space-y-1">
                         <div className="flex items-center text-xs text-gray-600">
                           <Calendar className="w-3 h-3 mr-1" />
-                          {new Date(test.date).toLocaleDateString('en-US', { 
-                            month: 'short', 
-                            day: 'numeric' 
+                          {new Date(test.date).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric'
                           })}
                         </div>
                         <div className="flex items-center text-xs text-gray-600">
@@ -346,7 +294,7 @@ const StudentDashboard = () => {
                           <Brain className="w-4 h-4 text-white" />
                         </div>
                         <div>
-                          <p className="text-sm font-bold text-gray-900">{test.aiConfidence}%</p>
+                          <p className="text-sm font-bold text-gray-900">95%</p>
                           <p className="text-xs text-gray-500">AI Confidence</p>
                         </div>
                       </div>

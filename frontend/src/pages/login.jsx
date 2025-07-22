@@ -3,6 +3,7 @@ import { Mail, Lock, Eye, EyeOff, Brain } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { ClipLoader } from "react-spinners";
 
 const Login = ({ onSwitchToSignup }) => {
     const backendURL = import.meta.env.VITE_BACKEND_URL;
@@ -12,21 +13,22 @@ const Login = ({ onSwitchToSignup }) => {
         password: ''
     })
     const [showPassword, setShowPassword] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
 
     const handleSubmit = (e) => {
         e.preventDefault();
+        setIsLoading(true);
         axios.post(`${backendURL}/user/login`, {
             ...formData
         }).then(response => {
-            console.log('Success:', response.data);
+            setIsLoading(false);
             localStorage.setItem('token', response.data.token);
             toast.success("Login Successful");
-            navigate('/');
+            navigate('/dashboard');
         }).catch(error => {
+            setIsLoading(false);
             console.error('Error:', error.message);
             toast.error(error.response.data.message);
-            setLoading(false);
-
         });
 
     };
@@ -114,9 +116,11 @@ const Login = ({ onSwitchToSignup }) => {
 
                         <button
                             type="submit"
+                            disabled={isLoading}
                             className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-4 rounded-2xl transition-all duration-300 shadow-lg hover:shadow-xl"
                         >
-                            Sign In
+                            {isLoading ? <ClipLoader color="#6C63FF" loading={true} size={23} /> : "Sign In"}
+
                         </button>
                     </form>
 

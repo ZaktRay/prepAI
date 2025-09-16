@@ -158,6 +158,7 @@ const FileUpload = () => {
                       </p>
                     </div>
                     <button
+                      disabled = {isLoading}
                       onClick={() => setSelectedFile(null)}
                       className="text-sm text-gray-500 hover:text-gray-700 underline"
                     >
